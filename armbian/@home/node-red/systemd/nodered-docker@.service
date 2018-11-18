@@ -1,0 +1,25 @@
+[Unit]
+Description=Node-RED: A visual wiring tool for the IoT
+After=docker.service
+
+[Service]
+RemainAfterExit=true
+EnvironmentFile=/home//%I/node-red/.service-config
+ExecStart=/usr/bin/docker run -d \
+		-t \
+		--init \
+		--name="node-red" \
+		--restart="unless-stopped" \
+		--user="${UID}" \
+		--volume="/etc/localtime:/etc/localtime:ro" \
+		--volume="/var/lib/services/node-red/:/home/node/.node-red/" \
+		--network="bridge" \
+		-p ${HTTP_PORT}:1880 \
+		-e NODERED_WEB_PORT="1880" \
+		-e NODERED_VERSION="${VERSION}" \
+		nodered:"${VERSION}"-arm32v7-debian;
+
+ExecStop=/usr/bin/docker rm --force node-red
+
+[Install]
+WantedBy=multi-user.target

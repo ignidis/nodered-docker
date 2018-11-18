@@ -7,7 +7,7 @@ docker run -d \
 	--restart="unless-stopped" \
 	--user="9001" \
 	--volume="/etc/localtime:/etc/localtime:ro" \
-	--volume="/var/lib/node-red/:/home/node/.node-red/" \
+	--volume="/var/lib/services/node-red/:/home/node/.node-red/" \
 	--network="bridge" \
 	-p 1880:1880 \
 	-e NODERED_WEB_PORT="1880" \
