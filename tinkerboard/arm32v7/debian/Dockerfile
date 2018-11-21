@@ -31,7 +31,10 @@ RUN	export DEBIAN_FRONTEND="noninteractive"; \
 	SERVICE_USER_UID=${NODE_SVC_UID}; \
 	SERVICE_GROUP=${NODE_SVC_NAME}; \
 	SERVICE_GROUP_UID=${NODE_SVC_UID}; \
-	ADD_GROUPS="sudo"; \
+#
+# Do not add sudo, if required add that group to the docker run command
+#
+	ADD_GROUPS=""; \
 #
 # Create service group and service account
 #
@@ -39,8 +42,9 @@ RUN	export DEBIAN_FRONTEND="noninteractive"; \
 	useradd -u "$SERVICE_USER_UID" -g "$SERVICE_GROUP" --groups "$ADD_GROUPS" --shell /bin/bash --create-home "$SERVICE_USER"; \
 #
 # Allow service account to sudo without pasword
+# We will use this only when we need a initialization run for the container, the init run should also assign the sudo group to the service user
 #
-	echo "${SERVICE_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/090_${SERVICE_USER}-nopasswd; \
+#	echo "${SERVICE_USER} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/090_${SERVICE_USER}-nopasswd; \
 #
 # CWD
 #
@@ -112,10 +116,10 @@ EXPOSE ${NODERED_WEB_PORT}
 #
 # Copy the start command
 #
-USER	${NODE_SVC_UID}
 COPY	nodeRED-run.sh "/opt/node-red/nodeRED-run.sh"
-RUN	sudo chmod +x "/opt/node-red/nodeRED-run.sh"
+RUN	chown "$SERVICE_USER":"$SERVICE_GROUP" "/opt/node-red/nodeRED-run.sh" && chmod +x "/opt/node-red/nodeRED-run.sh"
 
+USER	${NODE_SVC_UID}
 WORKDIR "/opt/node-red/"
 ENTRYPOINT [ "/opt/node-red/nodeRED-run.sh" ]
 #
