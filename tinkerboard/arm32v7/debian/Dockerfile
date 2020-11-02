@@ -78,23 +78,31 @@ RUN	export DEBIAN_FRONTEND="noninteractive"; \
 	wget "https://github.com/node-red/node-red/releases/download/$NODERED_VERSION/node-red-$NODERED_VERSION.zip"; \
 	unzip -d "/opt/" "node-red-$NODERED_VERSION.zip"; \
 	rm -f "node-red-$NODERED_VERSION.zip"; \
-	cd "/opt/node-red-$NODERED_VERSION/"; \
+# node-red distribution changed the zip contens beginning 0.20.0 to be unversioned
+	if [ -e "/opt/node-red-$NODERED_VERSION/" ]; \
+	then \
+		mv "/opt/node-red-$NODERED_VERSION/" "/opt/node-red/"; \
+	fi; \
+	cd "/opt/node-red/"; \
 	/opt/node/bin/npm install -g --production --no-optional; \
 #
 # Remove all preinstalled nodes to allow these been installed via the palette manager and thus stored outside of the container
 #
-	cd "/opt/node-red-$NODERED_VERSION/node_modules/"; \
+	cd "/opt/node-red/node_modules/"; \
 	/opt/node/bin/npm rm -s --no-audit --production --no-optional node-red-node-*; \
 #
-# Remove the Raspberry Pi hardware specific nodes
+# Remove the Raspberry Pi hardware specific nodes, if still there
 #
-	cd "/opt/node-red-$NODERED_VERSION/nodes/core/hardware/"; \
-	rm 36-rpi-gpio* nrgpio*; \
+	if [ -e "/opt/node-red/nodes/core/hardware/" ]; \
+	then \
+		cd "/opt/node-red/nodes/core/hardware/"; \
+		rm 36-rpi-gpio* nrgpio*; \
+	fi; \
 #
 # Set permisions for application directory and nodejs runtime
 #
 	chown -R "$SERVICE_USER":"$SERVICE_GROUP" "/opt/node-v$NODE_VERSION-linux-$ARCH"; \
-	chown -R "$SERVICE_USER":"$SERVICE_GROUP" "/opt/node-red-$NODERED_VERSION/"; \
+	chown -R "$SERVICE_USER":"$SERVICE_GROUP" "/opt/node-red/"; \
 #
 # Clean the apt cache and remove packages needed only for the installation
 #
